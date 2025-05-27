@@ -1,0 +1,23 @@
+
+<h2>Lista de Turmas</h2>
+<a href="/turmas/novo">Cadastrar Nova Turma</a>
+<table>
+  <thead>
+    <tr>
+      <th>Nome da Turma</th>
+      <th>Professor</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% turmas.forEach(turma => { %>
+      <tr>
+        <td><%= turma.nome %></td>
+        <td><%= turma.professor %></td>
+        <td>
+          <a href="/turmas/<%= turma.id %>/editar">Editar</a>
+        </td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>

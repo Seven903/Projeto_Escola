@@ -1,0 +1,23 @@
+
+<h2>Lista de Professores</h2>
+<a href="/professores/novo">Cadastrar Novo Professor</a>
+<table>
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Disciplina</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% professores.forEach(prof => { %>
+      <tr>
+        <td><%= prof.nome %></td>
+        <td><%= prof.disciplina %></td>
+        <td>
+          <a href="/professores/<%= prof.id %>/editar">Editar</a>
+        </td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
