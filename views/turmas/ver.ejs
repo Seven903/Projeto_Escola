@@ -1,0 +1,55 @@
+   <h2>Detalhes da Turma: <%= turma.nome %></h2>
+    <p><strong>Código da Turma:</strong> <%= turma.codigo %></p>
+    <p><strong>Professor:</strong> <%= turma.nome_professor || 'N/A' %></p>
+    <p><strong>Descrição:</strong> <%= turma.descricao || 'Sem descrição' %></p>
+
+    <hr>
+
+    <h3>Atividades da Turma</h3>
+    <% if (user.tipo === 'professor' && turma.id_professor === user.id) { %>
+        <a href="/atividades/nova?turmaId=<%= turma.id_turma %>">Criar Nova Atividade para esta Turma</a>
+    <% } %>
+    <% if (atividades && atividades.length > 0) { %>
+        <ul>
+            <% atividades.forEach(atividade => { %>
+                <li>
+                    <a href="/atividades/<%= atividade.id_atividade %>"><%= atividade.titulo %></a>
+                    (Prazo: <%= atividade.prazo ? new Date(atividade.prazo).toLocaleDateString('pt-BR') : 'Não definido' %>)
+                </li>
+            <% }) %>
+        </ul>
+    <% } else { %>
+        <p>Nenhuma atividade cadastrada para esta turma.</p>
+    <% } %>
+
+    <hr>
+    
+    <% if (user.tipo === 'professor' && turma.id_professor === user.id) { %>
+        <h3>Alunos Inscritos (<%= alunos.length %>)</h3>
+        <form action="/turmas/<%= turma.id_turma %>/adicionar-aluno" method="POST" class="mb-3">
+            <div>
+                <label for="emailAluno">Adicionar Aluno por Email:</label>
+                <input type="email" name="emailAluno" id="emailAluno" placeholder="email@exemplo.com" required>
+                <button type="submit">Adicionar Aluno</button>
+            </div>
+        </form>
+
+        <% if (alunos && alunos.length > 0) { %>
+            <ul>
+                <% alunos.forEach(aluno => { %>
+                    <li>
+                        <%= aluno.nome %> (<%= aluno.email %>)
+                        <form action="/turmas/<%= turma.id_turma %>/remover-aluno/<%= aluno.id_usuario %>?_method=POST" method="POST" style="display:inline; margin-left: 10px;">
+                             <input type="hidden" name="_method" value="DELETE"> <!-- Ou ajuste a rota para POST -->
+                            <button type="submit" onclick="return confirm('Remover este aluno da turma?');">Remover</button>
+                        </form>
+                    </li>
+                <% }) %>
+            </ul>
+        <% } else { %>
+            <p>Nenhum aluno inscrito nesta turma.</p>
+        <% } %>
+    <% } %>
+
+    <a href="/turmas">Voltar para Lista de Turmas</a>
+    

@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS Usuario (
    CREATE TABLE IF NOT EXISTS Turma (
     id_turma INTEGER PRIMARY KEY AUTOINCREMENT,
     nome VARCHAR(100) NOT NULL,
+    descricao TEXT,
     codigo VARCHAR(20) UNIQUE,
     id_professor INTEGER,
     FOREIGN KEY (id_professor) REFERENCES Professor(id_usuario) ON DELETE SET NULL ON UPDATE CASCADE

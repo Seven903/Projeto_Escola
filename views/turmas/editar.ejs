@@ -1,0 +1,18 @@
+    <h2>Editar Turma: <%= turma.nome %></h2>
+    <form action="/turmas/<%= turma.id_turma %>?_method=PUT" method="POST">
+        <div>
+            <label for="nome">Nome da Turma:</label>
+            <input type="text" id="nome" name="nome" value="<%= turma.nome %>" required>
+        </div>
+         <div>
+            <label for="codigo">Código da Turma:</label>
+            <input type="text" id="codigo" name="codigo" value="<%= turma.codigo %>" required>
+        </div>
+        <div>
+            <label for="descricao">Descrição (Opcional):</label>
+            <textarea id="descricao" name="descricao"><%= turma.descricao %></textarea>
+        </div>
+        <button type="submit">Salvar Alterações</button>
+    </form>
+    <a href="/turmas">Cancelar e Voltar</a>
+    

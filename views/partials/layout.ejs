@@ -1,20 +1,36 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title><%= typeof title !== 'undefined' ? title : 'Projeto Escola' %></title>
-
-  <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-  <%- include('header') %>
-
-  <main class="container">
-    <%- body %>
-  </main>
-
-  <%- include('footer') %>
-  <script src="/js/main.js"></script>
-</body>
-</html>
+   <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title><%= typeof title !== 'undefined' ? title : 'Projeto Escola' %></title>
+        <link rel="stylesheet" href="/css/style.css">
+    </head>
+    <body>
+        <%- include('header') %>
+    
+        <main class="container">
+            <%# Flash Messages %>
+            <% if (locals.success_msg && success_msg.length > 0) { %>
+                <div class="alert alert-success" role="alert" style="background-color: #d4edda; color: #155724; padding: 10px; margin-bottom: 15px; border: 1px solid #c3e6cb; border-radius: 4px;">
+                    <%= success_msg %>
+                </div>
+            <% } %>
+            <% if (locals.error_msg && error_msg.length > 0) { %>
+                <div class="alert alert-danger" role="alert" style="background-color: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 15px; border: 1px solid #f5c6cb; border-radius: 4px;">
+                    <%= error_msg %>
+                </div>
+            <% } %>
+            <% if (locals.error && error.length > 0) { %>
+                <div class="alert alert-danger" role="alert" style="background-color: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 15px; border: 1px solid #f5c6cb; border-radius: 4px;">
+                    <%= error %>
+                </div>
+            <% } %>
+    
+            <%- body %>
+        </main>
+    
+        <%- include('footer') %>
+        <script src="/js/main.js"></script>
+    </body>
+    </html>

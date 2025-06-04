@@ -1,11 +1,30 @@
-<header>
-    <nav>
-      <ul>
-        <li><a href="/">Início</a></li>
-        <li><a href="/alunos">Alunos</a></li>
-        <li><a href="/professores">Professores</a></li>
-        <li><a href="/turmas">Turmas</a></li>
-        <li><a href="/atividades/nova">Nova Atividade</a></li>
-      </ul>
-    </nav>
-  </header>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Início</a></li>
+                <% if (locals.user) { %>
+                    <li><a href="/painel">Meu Painel</a></li>
+                    <% if (locals.user.tipo === 'professor') { %>
+                        <li><a href="/turmas">Minhas Turmas</a></li>
+                        <%# Link para criar atividade pode estar dentro de uma turma específica %>
+                    <% } %>
+                    <% if (locals.user.tipo === 'aluno') { %>
+                        <%# Links específicos para alunos, como "Minhas Atividades" %>
+                    <% } %>
+                     <% if (locals.user.tipo === 'administrador') { %>
+                        <li><a href="/alunos">Gerenciar Alunos</a></li>
+                        <li><a href="/professores">Gerenciar Professores</a></li>
+                    <% } %>
+                    <li><a href="/auth/logout">Sair (<%= locals.user.nome %>)</a></li>
+                <% } else { %>
+                    <li><a href="/auth/login">Login</a></li>
+                    <li><a href="/auth/cadastro">Cadastro</a></li>
+                <% } %>
+                <%# Links antigos podem ser removidos ou adaptados se forem para gestão geral %>
+                <%# <li><a href="/alunos">Alunos</a></li> %>
+                <%# <li><a href="/professores">Professores</a></li> %>
+                <%# <li><a href="/turmas">Turmas</a></li> %>
+            </ul>
+        </nav>
+    </header>
+    

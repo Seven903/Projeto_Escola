@@ -1,0 +1,38 @@
+   <h2>Cadastro de Novo Usuário</h2>
+
+    <% if (typeof error_msg !== 'undefined' && error_msg.length > 0) { %>
+        <div class="alert alert-danger"><%= error_msg %></div>
+    <% } %>
+    <% if (typeof success_msg !== 'undefined' && success_msg.length > 0) { %>
+        <div class="alert alert-success"><%= success_msg %></div>
+    <% } %>
+
+    <form action="/auth/cadastro" method="POST">
+        <div>
+            <label for="nome">Nome Completo:</label>
+            <input type="text" id="nome" name="nome" required>
+        </div>
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div>
+            <label for="senha">Senha:</label>
+            <input type="password" id="senha" name="senha" required>
+        </div>
+        <div>
+            <label for="confirmarSenha">Confirmar Senha:</label>
+            <input type="password" id="confirmarSenha" name="confirmarSenha" required>
+        </div>
+        <div>
+            <label for="tipo">Tipo de Usuário:</label>
+            <select id="tipo" name="tipo" required>
+                <option value="">Selecione...</option>
+                <option value="aluno">Aluno</option>
+                <option value="professor">Professor</option>
+            </select>
+        </div>
+        <button type="submit">Cadastrar</button>
+    </form>
+    <p>Já tem uma conta? <a href="/auth/login">Faça login</a></p>
+    

@@ -1,0 +1,18 @@
+    <h2>Criar Nova Turma</h2>
+    <form action="/turmas" method="POST">
+        <div>
+            <label for="nome">Nome da Turma:</label>
+            <input type="text" id="nome" name="nome" required>
+        </div>
+        <div>
+            <label for="codigo">Código da Turma (para alunos se inscreverem):</label>
+            <input type="text" id="codigo" name="codigo" required>
+        </div>
+        <div>
+            <label for="descricao">Descrição (Opcional):</label>
+            <textarea id="descricao" name="descricao"></textarea>
+        </div>
+        <button type="submit">Criar Turma</button>
+    </form>
+    <a href="/turmas">Voltar para Lista de Turmas</a>
+    
