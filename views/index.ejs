@@ -1,3 +1,16 @@
-
-<h1>Bem-vindo ao Sistema de Gestão Escolar</h1>
-<p>Use o menu acima para navegar pelas seções.</p>
+<div class="jumbotron text-center bg-light p-5 rounded">
+    <h1 class="display-4">Bem-vindo ao Sistema de Gestão Escolar!</h1>
+    <p class="lead">Simplifique a organização de turmas, atividades e o acompanhamento de alunos e professores.</p>
+    <hr class="my-4">
+    <p>Use o menu de navegação acima para acessar as diferentes seções do sistema.</p>
+    <% if (!user) { %>
+        <p class="lead">
+            <a class="btn btn-primary btn-lg" href="/auth/login" role="button">Entrar</a>
+            <a class="btn btn-secondary btn-lg" href="/auth/cadastro" role="button">Cadastrar-se</a>
+        </p>
+    <% } else { %>
+        <p class="lead">
+            <a class="btn btn-primary btn-lg" href="/painel" role="button">Ir para o Painel</a>
+        </p>
+    <% } %>
+</div>

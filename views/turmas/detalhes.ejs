@@ -1,0 +1,91 @@
+<div class="container mt-4">
+    <h1>Detalhes da Turma: <%= turma.nome %></h1>
+    <hr>
+    <%- include('../partials/messages') %>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Informações da Turma
+        </div>
+        <div class="card-body">
+            <p><strong>Nome:</strong> <%= turma.nome %></p>
+            <p><strong>Código:</strong> <%= turma.codigo %></p>
+            <p><strong>Professor:</strong> <%= turma.nome_professor %></p>
+            <p><strong>Descrição:</strong> <%= turma.descricao || 'Nenhuma descrição fornecida.' %></p>
+            
+            <% if (user.tipo === 'professor' && user.id === turma.id_professor) { %>
+                <a href="/turmas/<%= turma.id_turma %>/editar" class="btn btn-warning btn-sm">Editar Turma</a>
+                <form action="/turmas/<%= turma.id_turma %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir esta turma? Todas as atividades e entregas serão removidas!');">
+                    <button type="submit" class="btn btn-danger btn-sm">Excluir Turma</button>
+                </form>
+            <% } %>
+        </div>
+    </div>
+
+    <% if (user.tipo === 'professor' && user.id === turma.id_professor) { %>
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                Adicionar Aluno à Turma
+            </div>
+            <div class="card-body">
+                <form action="/turmas/<%= turma.id_turma %>/adicionar-aluno" method="POST">
+                    <div class="mb-3">
+                        <label for="emailAluno" class="form-label">E-mail do Aluno:</label>
+                        <input type="email" class="form-control" id="emailAluno" name="emailAluno" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Adicionar Aluno</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                Alunos Inscritos (<%= alunos.length %>)
+            </div>
+            <div class="card-body">
+                <% if (alunos && alunos.length > 0) { %>
+                    <ul class="list-group">
+                        <% alunos.forEach(aluno => { %>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <%= aluno.nome %> (<%= aluno.email %>)
+                                <form action="/turmas/<%= turma.id_turma %>/remover-aluno/<%= aluno.id_usuario %>?_method=POST" method="POST" onsubmit="return confirm('Tem certeza que deseja remover <%= aluno.nome %> desta turma?');">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Remover</button>
+                                </form>
+                            </li>
+                        <% }); %>
+                    </ul>
+                <% } else { %>
+                    <p>Nenhum aluno inscrito nesta turma ainda.</p>
+                <% } %>
+            </div>
+        </div>
+    <% } %>
+
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+            Atividades da Turma (<%= atividades.length %>)
+            <% if (user.tipo === 'professor' && user.id === turma.id_professor) { %>
+                <a href="/atividades/nova?turmaId=<%= turma.id_turma %>" class="btn btn-light btn-sm float-end">Criar Nova Atividade</a>
+            <% } %>
+        </div>
+        <div class="card-body">
+            <% if (atividades && atividades.length > 0) { %>
+                <div class="list-group">
+                    <% atividades.forEach(atividade => { %>
+                        <a href="/atividades/<%= atividade.id_atividade %>" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1"><%= atividade.titulo %></h5>
+                                <small>Prazo: <%= new Date(atividade.prazo).toLocaleDateString('pt-BR') %></small>
+                            </div>
+                            <p class="mb-1"><%= atividade.descricao.substring(0, 100) %>...</p>
+                        </a>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <p>Nenhuma atividade cadastrada para esta turma ainda.</p>
+            <% } %>
+        </div>
+    </div>
+
+    <a href="/turmas" class="btn btn-secondary">Voltar para Turmas</a>
+</div>

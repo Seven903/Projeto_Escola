@@ -1,0 +1,25 @@
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>Inscrever-se em uma Turma</h4>
+                </div>
+                <div class="card-body">
+                    <%- include('../partials/messages') %>
+
+                    <form action="/turmas/inscrever" method="POST">
+                        <div class="mb-3">
+                            <label for="codigoTurma" class="form-label">Código da Turma:</label>
+                            <input type="text" class="form-control" id="codigoTurma" name="codigoTurma" placeholder="Insira o código da turma" required>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">Inscrever</button>
+                            <a href="/turmas" class="btn btn-link">Voltar para Minhas Turmas</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

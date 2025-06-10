@@ -1,0 +1,54 @@
+<div class="container mt-4">
+    <h1><%= title %></h1>
+    <hr>
+    <%- include('../partials/messages') %>
+
+    <% if (user.tipo === 'professor') { %>
+        <div class="mb-3 d-flex justify-content-end">
+            <a href="/atividades/nova" class="btn btn-success">Criar Nova Atividade</a>
+        </div>
+    <% } %>
+
+    <% if (atividades && atividades.length > 0) { %>
+        <div class="list-group">
+            <% atividades.forEach(atividade => { %>
+                <a href="/atividades/<%= atividade.id_atividade %>" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                        <h5 class="mb-1">
+                            <%= atividade.titulo %> 
+                            <% if (atividade.nome_turma) { %>
+                                <small class="text-muted"> (<%= atividade.nome_turma %>)</small>
+                            <% } %>
+                        </h5>
+                        <small>Prazo: <%= new Date(atividade.prazo).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }) %></small>
+                    </div>
+                    <p class="mb-1"><%= atividade.descricao.substring(0, 150) %><% if (atividade.descricao.length > 150) { %>...<% } %></p>
+                    
+                    <% if (user.tipo === 'aluno') { %>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <% if (atividade.status_entrega) { %>
+                                <span class="badge 
+                                    <% if (atividade.status_entrega === 'avaliado') { %>bg-success
+                                    <% } else if (atividade.status_entrega === 'entregue') { %>bg-info
+                                    <% } else if (atividade.status_entrega === 'atrasado') { %>bg-warning text-dark
+                                    <% } else { %>bg-secondary<% } %>">
+                                    Status: <%= atividade.status_entrega.charAt(0).toUpperCase() + atividade.status_entrega.slice(1) %>
+                                </span>
+                                <% if (atividade.status_entrega === 'avaliado' && typeof atividade.nota_entrega !== 'undefined' && atividade.nota_entrega !== null) { %>
+                                    <span class="badge bg-primary">Nota: <%= atividade.nota_entrega %></span>
+                                    <% if (atividade.comentario_entrega) { %>
+                                        <small class="text-muted ms-2">Comentário: <%= atividade.comentario_entrega.substring(0, 50) %><% if (atividade.comentario_entrega.length > 50) { %>...<% } %></small>
+                                    <% } %>
+                                <% } %>
+                            <% } else { %>
+                                <span class="badge bg-danger">Status: Pendente</span>
+                            <% } %>
+                        </div>
+                    <% } %>
+                </a>
+            <% }); %>
+        </div>
+    <% } else { %>
+        <p>Nenhuma atividade encontrada.</p>
+    <% } %>
+</div>

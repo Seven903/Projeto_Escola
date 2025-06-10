@@ -2,13 +2,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db/db');
 const { isAuthenticated, isProfessor, isAluno } = require('../middlewares/authMiddleware');
-const { promisify } = require('util'); 
-
+const { promisify } = require('util');
 
 const dbAll = promisify(db.all.bind(db));
 const dbGet = promisify(db.get.bind(db));
 const dbRun = promisify(db.run.bind(db));
-
 
 router.get('/', isAuthenticated, async (req, res) => {
     try {
@@ -16,7 +14,13 @@ router.get('/', isAuthenticated, async (req, res) => {
         let pageTitle = "Minhas Turmas";
 
         if (req.user.tipo === 'professor') {
-            turmas = await dbAll("SELECT t.*, u.nome as nome_professor FROM Turma t LEFT JOIN Usuario u ON t.id_professor = u.id_usuario WHERE t.id_professor = ?", [req.user.id]);
+            turmas = await dbAll(`
+                SELECT t.*, u.nome as nome_professor
+                FROM Turma t
+                LEFT JOIN Usuario u ON t.id_professor = u.id_usuario
+                WHERE t.id_professor = ?
+                ORDER BY t.nome ASC
+            `, [req.user.id]);  
         } else if (req.user.tipo === 'aluno') {
             pageTitle = "Turmas Inscritas";
             turmas = await dbAll(`
@@ -25,47 +29,52 @@ router.get('/', isAuthenticated, async (req, res) => {
                 JOIN Aluno_Turma at ON t.id_turma = at.id_turma
                 LEFT JOIN Usuario u_prof ON t.id_professor = u_prof.id_usuario
                 WHERE at.id_aluno = ?
-            `, [req.user.id]);
-        } else if (req.user.tipo === 'administrador') {
-            pageTitle = "Todas as Turmas";
-             turmas = await dbAll("SELECT t.*, u.nome as nome_professor FROM Turma t LEFT JOIN Usuario u ON t.id_professor = u.id_usuario");
+                ORDER BY t.nome ASC
+            `, [req.user.id]);  
+        } else {
+            req.flash('error_msg', 'Tipo de usuário não autorizado para ver turmas.');
+            return res.redirect('/painel');
         }
-        
+
         res.render('turmas/index', {
             title: pageTitle,
             turmas: turmas,
-            user: req.user 
+            user: req.user,
+            messages: req.flash()
         });
     } catch (err) {
-        console.error("Erro ao buscar turmas:", err);
+        console.error("Erro ao listar turmas:", err);
         req.flash('error_msg', 'Não foi possível carregar as turmas.');
         res.redirect('/painel');
     }
 });
 
-
 router.get('/nova', isAuthenticated, isProfessor, (req, res) => {
-    res.render('turmas/nova', { title: 'Criar Nova Turma' });
+    res.render('turmas/nova', { 
+        title: 'Criar Nova Turma',
+        messages: req.flash() 
+    });
 });
 
-
 router.post('/', isAuthenticated, isProfessor, async (req, res) => {
-    const { nome, descricao, codigo } = req.body; 
+    const { nome, codigo, descricao } = req.body;
+    const id_professor = req.user.id; // Agora req.user.id deve estar populado
+
     if (!nome || !codigo) {
         req.flash('error_msg', 'Nome e Código da Turma são obrigatórios.');
         return res.redirect('/turmas/nova');
     }
 
     try {
-        
-        const turmaExistente = await dbGet("SELECT id_turma FROM Turma WHERE codigo = ?", [codigo]);
+        const turmaExistente = await dbGet("SELECT codigo FROM Turma WHERE codigo = ?", [codigo]);
         if (turmaExistente) {
-            req.flash('error_msg', 'Este código de turma já está em uso.');
+            req.flash('error_msg', 'Já existe uma turma com este código.');
             return res.redirect('/turmas/nova');
         }
 
-        await dbRun("INSERT INTO Turma (nome, descricao, codigo, id_professor) VALUES (?, ?, ?, ?)",
-            [nome, descricao || null, codigo, req.user.id]);
+        await dbRun("INSERT INTO Turma (nome, codigo, descricao, id_professor) VALUES (?, ?, ?, ?)",
+            [nome, codigo, descricao || null, id_professor]);
+
         req.flash('success_msg', 'Turma criada com sucesso!');
         res.redirect('/turmas');
     } catch (err) {
@@ -75,41 +84,102 @@ router.post('/', isAuthenticated, isProfessor, async (req, res) => {
     }
 });
 
+router.get('/inscrever', isAuthenticated, isAluno, (req, res) => {
+    res.render('turmas/inscrever', {
+        title: 'Inscrever-se em Turma',
+        messages: req.flash()
+    });
+});
+
+router.post('/inscrever', isAuthenticated, isAluno, async (req, res) => {
+    const { codigoTurma } = req.body;
+    const id_aluno = req.user.id;  
+
+    if (!codigoTurma) {
+        req.flash('error_msg', 'O código da turma é obrigatório.');
+        return res.redirect('/turmas/inscrever');
+    }
+
+    try {
+        const turma = await dbGet("SELECT id_turma FROM Turma WHERE codigo = ?", [codigoTurma]);
+        if (!turma) {
+            req.flash('error_msg', 'Turma não encontrada com o código fornecido.');
+            return res.redirect('/turmas/inscrever');
+        }
+
+        const jaInscrito = await dbGet("SELECT id_aluno FROM Aluno_Turma WHERE id_aluno = ? AND id_turma = ?", [id_aluno, turma.id_turma]);
+        if (jaInscrito) {
+            req.flash('error_msg', 'Você já está inscrito nesta turma.');
+            return res.redirect('/turmas');
+        }
+
+        await dbRun("INSERT INTO Aluno_Turma (id_aluno, id_turma) VALUES (?, ?)", [id_aluno, turma.id_turma]);
+        req.flash('success_msg', 'Inscrição na turma realizada com sucesso!');
+        res.redirect('/turmas');
+    } catch (err) {
+        console.error("Erro ao inscrever aluno na turma:", err);
+        req.flash('error_msg', 'Erro ao inscrever na turma. Tente novamente.');
+        res.redirect('/turmas/inscrever');
+    }
+});
 
 router.get('/:id', isAuthenticated, async (req, res) => {
     const turmaId = req.params.id;
     try {
-        const turma = await dbGet("SELECT t.*, u.nome as nome_professor FROM Turma t LEFT JOIN Usuario u ON t.id_professor = u.id_usuario WHERE t.id_turma = ?", [turmaId]);
+        const turma = await dbGet(`
+            SELECT t.*, u.nome as nome_professor
+            FROM Turma t
+            LEFT JOIN Usuario u ON t.id_professor = u.id_usuario
+            WHERE t.id_turma = ?
+        `, [turmaId]);
+
         if (!turma) {
             req.flash('error_msg', 'Turma não encontrada.');
             return res.redirect('/turmas');
         }
 
-        let podeVerDetalhes = false;
+        let hasAccess = false;
+        let alunosInscritos = [];
+        let atividadesDaTurma = [];
+
         if (req.user.tipo === 'professor' && turma.id_professor === req.user.id) {
-            podeVerDetalhes = true;
+            hasAccess = true;
+            alunosInscritos = await dbAll(`
+                SELECT u.id_usuario, u.nome, u.email
+                FROM Usuario u
+                JOIN Aluno_Turma at ON u.id_usuario = at.id_aluno
+                WHERE at.id_turma = ? AND u.tipo = 'aluno'
+                ORDER BY u.nome ASC
+            `, [turmaId]);
+            atividadesDaTurma = await dbAll(`
+                SELECT * FROM Atividade WHERE id_turma = ?
+                ORDER BY prazo ASC
+            `, [turmaId]);
         } else if (req.user.tipo === 'aluno') {
-            const inscricao = await dbGet("SELECT * FROM Aluno_Turma WHERE id_aluno = ? AND id_turma = ?", [req.user.id, turmaId]);
-            if (inscricao) podeVerDetalhes = true;
-        } else if (req.user.tipo === 'administrador') {
-            podeVerDetalhes = true;
+            const alunoNaTurma = await dbGet("SELECT id_aluno FROM Aluno_Turma WHERE id_aluno = ? AND id_turma = ?", [req.user.id, turmaId]); 
+            if (alunoNaTurma) {
+                hasAccess = true;
+                atividadesDaTurma = await dbAll(`
+                    SELECT * FROM Atividade WHERE id_turma = ?
+                    ORDER BY prazo ASC
+                `, [turmaId]);
+            }
         }
 
-        if (!podeVerDetalhes) {
-            req.flash('error_msg', 'Você não tem permissão para ver esta turma.');
+        if (!hasAccess) {
+            req.flash('error_msg', 'Você não tem permissão para visualizar esta turma.');
             return res.redirect('/turmas');
         }
 
-        const alunosInscritos = await dbAll("SELECT u.id_usuario, u.nome, u.email FROM Usuario u JOIN Aluno_Turma at ON u.id_usuario = at.id_aluno WHERE at.id_turma = ?", [turmaId]);
-        const atividadesDaTurma = await dbAll("SELECT * FROM Atividade WHERE id_turma = ?", [turmaId]);
-
-        res.render('turmas/ver', {
-            title: `Turma: ${turma.nome}`,
-            turma,
+        res.render('turmas/detalhes', {
+            title: `Detalhes da Turma: ${turma.nome}`,
+            turma: turma,
             alunos: alunosInscritos,
             atividades: atividadesDaTurma,
-            user: req.user
+            user: req.user,
+            messages: req.flash()
         });
+
     } catch (err) {
         console.error("Erro ao buscar detalhes da turma:", err);
         req.flash('error_msg', 'Erro ao carregar detalhes da turma.');
@@ -117,45 +187,53 @@ router.get('/:id', isAuthenticated, async (req, res) => {
     }
 });
 
-
-
 router.get('/:id/editar', isAuthenticated, isProfessor, async (req, res) => {
     const turmaId = req.params.id;
     try {
-        const turma = await dbGet("SELECT * FROM Turma WHERE id_turma = ? AND id_professor = ?", [turmaId, req.user.id]);
+        const turma = await dbGet("SELECT * FROM Turma WHERE id_turma = ? AND id_professor = ?", [turmaId, req.user.id]); // Usa req.user.id
         if (!turma) {
             req.flash('error_msg', 'Turma não encontrada ou você não tem permissão para editá-la.');
             return res.redirect('/turmas');
         }
-        res.render('turmas/editar', { title: `Editar Turma: ${turma.nome}`, turma });
+        res.render('turmas/editar', { 
+            title: `Editar Turma: ${turma.nome}`, 
+            turma: turma,
+            messages: req.flash()
+        });
     } catch (err) {
-        console.error("Erro ao buscar turma para edição:", err);
+        console.error("Erro ao carregar formulário de edição de turma:", err);
         req.flash('error_msg', 'Erro ao carregar turma para edição.');
         res.redirect('/turmas');
     }
 });
 
-
 router.put('/:id', isAuthenticated, isProfessor, async (req, res) => {
     const turmaId = req.params.id;
-    const { nome, descricao, codigo } = req.body;
+    const { nome, codigo, descricao } = req.body;
+
     if (!nome || !codigo) {
         req.flash('error_msg', 'Nome e Código da Turma são obrigatórios.');
-        // Para redirecionar de volta ao form de edição, precisamos buscar a turma novamente ou passar os dados
         return res.redirect(`/turmas/${turmaId}/editar`);
     }
+
     try {
-        
-        const outraTurmaComCodigo = await dbGet("SELECT id_turma FROM Turma WHERE codigo = ? AND id_turma != ?", [codigo, turmaId]);
-        if (outraTurmaComCodigo) {
-            req.flash('error_msg', 'Este código de turma já está em uso por outra turma.');
+        const turmaDoProfessor = await dbGet("SELECT id_turma FROM Turma WHERE id_turma = ? AND id_professor = ?", [turmaId, req.user.id]); // Usa req.user.id
+        if (!turmaDoProfessor) {
+            req.flash('error_msg', 'Você não tem permissão para editar esta turma.');
+            return res.redirect('/turmas');
+        }
+
+        const codigoExistente = await dbGet("SELECT id_turma FROM Turma WHERE codigo = ? AND id_turma != ?", [codigo, turmaId]);
+        if (codigoExistente) {
+            req.flash('error_msg', 'Já existe outra turma com este código.');
             return res.redirect(`/turmas/${turmaId}/editar`);
         }
 
-        await dbRun("UPDATE Turma SET nome = ?, descricao = ?, codigo = ? WHERE id_turma = ? AND id_professor = ?",
-            [nome, descricao || null, codigo, turmaId, req.user.id]);
+        await dbRun("UPDATE Turma SET nome = ?, codigo = ?, descricao = ? WHERE id_turma = ?",
+            [nome, codigo, descricao || null, turmaId]);
+
         req.flash('success_msg', 'Turma atualizada com sucesso!');
-        res.redirect('/turmas');
+        res.redirect(`/turmas/${turmaId}`);
     } catch (err) {
         console.error("Erro ao atualizar turma:", err);
         req.flash('error_msg', 'Erro ao atualizar turma.');
@@ -163,17 +241,17 @@ router.put('/:id', isAuthenticated, isProfessor, async (req, res) => {
     }
 });
 
-
 router.delete('/:id', isAuthenticated, isProfessor, async (req, res) => {
     const turmaId = req.params.id;
     try {
-        
-        const result = await dbRun("DELETE FROM Turma WHERE id_turma = ? AND id_professor = ?", [turmaId, req.user.id]);
-        if (result.changes === 0) {
-             req.flash('error_msg', 'Turma não encontrada ou você não tem permissão para removê-la.');
-        } else {
-            req.flash('success_msg', 'Turma removida com sucesso!');
+        const turmaDoProfessor = await dbGet("SELECT id_turma FROM Turma WHERE id_turma = ? AND id_professor = ?", [turmaId, req.user.id]);  
+        if (!turmaDoProfessor) {
+            req.flash('error_msg', 'Você não tem permissão para remover esta turma.');
+            return res.redirect('/turmas');
         }
+
+        await dbRun("DELETE FROM Turma WHERE id_turma = ?", [turmaId]);
+        req.flash('success_msg', 'Turma removida com sucesso!');
         res.redirect('/turmas');
     } catch (err) {
         console.error("Erro ao remover turma:", err);
@@ -182,49 +260,17 @@ router.delete('/:id', isAuthenticated, isProfessor, async (req, res) => {
     }
 });
 
-
-router.post('/inscrever', isAuthenticated, isAluno, async (req, res) => {
-    const { codigoTurma } = req.body;
-    if (!codigoTurma) {
-        req.flash('error_msg', 'Código da turma é obrigatório.');
-        return res.redirect('/painel'); 
-    }
-    try {
-        const turma = await dbGet("SELECT id_turma FROM Turma WHERE codigo = ?", [codigoTurma]);
-        if (!turma) {
-            req.flash('error_msg', 'Turma com este código não encontrada.');
-            return res.redirect('/painel');
-        }
-
-        const jaInscrito = await dbGet("SELECT * FROM Aluno_Turma WHERE id_aluno = ? AND id_turma = ?", [req.user.id, turma.id_turma]);
-        if (jaInscrito) {
-            req.flash('error_msg', 'Você já está inscrito nesta turma.');
-            return res.redirect(`/turmas/${turma.id_turma}`);
-        }
-
-        await dbRun("INSERT INTO Aluno_Turma (id_aluno, id_turma) VALUES (?, ?)", [req.user.id, turma.id_turma]);
-        req.flash('success_msg', 'Inscrição na turma realizada com sucesso!');
-        res.redirect(`/turmas/${turma.id_turma}`);
-    } catch (err) {
-        console.error("Erro ao inscrever aluno na turma:", err);
-        req.flash('error_msg', 'Erro ao processar inscrição.');
-        res.redirect('/painel');
-    }
-});
-
-
 router.post('/:id/adicionar-aluno', isAuthenticated, isProfessor, async (req, res) => {
     const turmaId = req.params.id;
     const { emailAluno } = req.body;
 
     if (!emailAluno) {
-        req.flash('error_msg', 'Email do aluno é obrigatório.');
+        req.flash('error_msg', 'O e-mail do aluno é obrigatório.');
         return res.redirect(`/turmas/${turmaId}`);
     }
 
     try {
-        
-        const turmaDoProfessor = await dbGet("SELECT id_turma FROM Turma WHERE id_turma = ? AND id_professor = ?", [turmaId, req.user.id]);
+        const turmaDoProfessor = await dbGet("SELECT id_turma FROM Turma WHERE id_turma = ? AND id_professor = ?", [turmaId, req.user.id]);  
         if (!turmaDoProfessor) {
             req.flash('error_msg', 'Você não tem permissão para gerenciar esta turma.');
             return res.redirect('/turmas');
@@ -232,12 +278,12 @@ router.post('/:id/adicionar-aluno', isAuthenticated, isProfessor, async (req, re
 
         const aluno = await dbGet("SELECT id_usuario FROM Usuario WHERE email = ? AND tipo = 'aluno'", [emailAluno]);
         if (!aluno) {
-            req.flash('error_msg', `Aluno com email "${emailAluno}" não encontrado.`);
+            req.flash('error_msg', 'Aluno não encontrado ou e-mail inválido.');
             return res.redirect(`/turmas/${turmaId}`);
         }
 
-        const jaInscrito = await dbGet("SELECT * FROM Aluno_Turma WHERE id_aluno = ? AND id_turma = ?", [aluno.id_usuario, turmaId]);
-        if (jaInscrito) {
+        const jaNaTurma = await dbGet("SELECT id_aluno FROM Aluno_Turma WHERE id_aluno = ? AND id_turma = ?", [aluno.id_usuario, turmaId]);
+        if (jaNaTurma) {
             req.flash('error_msg', 'Este aluno já está inscrito nesta turma.');
             return res.redirect(`/turmas/${turmaId}`);
         }
@@ -253,25 +299,24 @@ router.post('/:id/adicionar-aluno', isAuthenticated, isProfessor, async (req, re
     }
 });
 
-
 router.post('/:id/remover-aluno/:alunoId', isAuthenticated, isProfessor, async (req, res) => {
     const { id: turmaId, alunoId } = req.params;
     try {
-        const turmaDoProfessor = await dbGet("SELECT id_turma FROM Turma WHERE id_turma = ? AND id_professor = ?", [turmaId, req.user.id]);
+        const turmaDoProfessor = await dbGet("SELECT id_turma FROM Turma WHERE id_turma = ? AND id_professor = ?", [turmaId, req.user.id]);  
         if (!turmaDoProfessor) {
             req.flash('error_msg', 'Você não tem permissão para gerenciar esta turma.');
             return res.redirect('/turmas');
         }
 
         await dbRun("DELETE FROM Aluno_Turma WHERE id_aluno = ? AND id_turma = ?", [alunoId, turmaId]);
-        req.flash('success_msg', 'Aluno removido da turma.');
+        req.flash('success_msg', 'Aluno removido da turma!');
         res.redirect(`/turmas/${turmaId}`);
+
     } catch (err) {
         console.error("Erro ao remover aluno:", err);
         req.flash('error_msg', 'Erro ao remover aluno da turma.');
         res.redirect(`/turmas/${turmaId}`);
     }
 });
-
 
 module.exports = router;

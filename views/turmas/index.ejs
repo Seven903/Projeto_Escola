@@ -1,51 +1,68 @@
-    <h2><%= title %></h2>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><%= title %></h1>
+        <% if (user.tipo === 'professor') { %>
+            <a href="/turmas/nova" class="btn btn-primary">Criar Nova Turma</a>
+        <% } %>
+    </div>
 
-    <% if (user.tipo === 'professor') { %>
-        <a href="/turmas/nova" class="btn btn-primary mb-3">Criar Nova Turma</a>
-    <% } %>
+    <%- include('../partials/messages') %>
+
     <% if (user.tipo === 'aluno') { %>
-        <form action="/turmas/inscrever" method="POST" class="mb-3">
-            <div>
-                <label for="codigoTurma">Inscrever-se em uma Turma (Código):</label>
-                <input type="text" name="codigoTurma" id="codigoTurma" required>
-                <button type="submit">Inscrever</button>
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Inscrever-se em uma Turma</h5>
+                <form action="/turmas/inscrever" method="POST" class="row g-3 align-items-end">
+                    <div class="col-auto">
+                        <label for="codigoTurma" class="visually-hidden">Código da Turma</label>
+                        <input type="text" class="form-control" id="codigoTurma" name="codigoTurma" placeholder="Código da Turma" required>
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-success">Inscrever</button>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     <% } %>
-
 
     <% if (turmas && turmas.length > 0) { %>
-        <table>
-            <thead>
-                <tr>
-                    <th>Nome da Turma</th>
-                    <th>Código</th>
-                    <th>Professor</th>
-                    <th>Descrição</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% turmas.forEach(turma => { %>
+        <div class="table-responsive">
+            <table class="table table-hover table-striped shadow-sm rounded overflow-hidden">
+                <thead class="bg-dark text-white">
                     <tr>
-                        <td><%= turma.nome %></td>
-                        <td><%= turma.codigo %></td>
-                        <td><%= turma.nome_professor || 'N/A' %></td>
-                        <td><%= turma.descricao || 'Sem descrição' %></td>
-                        <td>
-                            <a href="/turmas/<%= turma.id_turma %>">Ver Detalhes</a>
-                            <% if (user.tipo === 'professor' && turma.id_professor === user.id) { %>
-                                | <a href="/turmas/<%= turma.id_turma %>/editar">Editar</a> |
-                                <form action="/turmas/<%= turma.id_turma %>?_method=DELETE" method="POST" style="display:inline;">
-                                    <button type="submit" onclick="return confirm('Tem certeza que deseja excluir esta turma?');">Excluir</button>
-                                </form>
-                            <% } %>
-                        </td>
+                        <th>Nome da Turma</th>
+                        <th>Código</th>
+                        <th>Professor</th>
+                        <th>Descrição</th>
+                        <th>Ações</th>
                     </tr>
-                <% }) %>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <% turmas.forEach(turma => { %>
+                        <tr>
+                            <td><%= turma.nome %></td>
+                            <td><%= turma.codigo %></td>
+                            <td><%= turma.nome_professor || 'N/A' %></td>
+                            <td><%= turma.descricao || 'Sem descrição' %></td>
+                            <td>
+                                <a href="/turmas/<%= turma.id_turma %>" class="btn btn-sm btn-info me-1">Ver Detalhes</a>
+                                <% if (user.tipo === 'professor' && turma.id_professor === user.id) { %>
+                                    <a href="/turmas/<%= turma.id_turma %>/editar" class="btn btn-sm btn-warning me-1">Editar</a>
+                                    <form action="/turmas/<%= turma.id_turma %>?_method=DELETE" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Tem certeza que deseja excluir esta turma? Isso removerá alunos e atividades relacionadas.');">Excluir</button>
+                                    </form>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        </div>
     <% } else { %>
         <p>Nenhuma turma encontrada.</p>
+        <% if (user.tipo === 'professor') { %>
+            <p>Comece criando uma nova turma!</p>
+            <a href="/turmas/nova" class="btn btn-success">Criar Nova Turma</a>
+        <% } %>
     <% } %>
-    
+</div>

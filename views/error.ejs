@@ -1,0 +1,14 @@
+<div class="container mt-5">
+    <div class="jumbotron">
+        <h1 class="display-4"><%= title %></h1>
+        <p class="lead"><%= message %></p>
+        <hr class="my-4">
+        <p>Parece que algo deu errado ou a página que você procura não existe.</p>
+        <a class="btn btn-primary btn-lg" href="/painel" role="button">Voltar para o Painel</a>
+        <a class="btn btn-secondary btn-lg" href="/" role="button">Ir para a Página Inicial</a>
+        <% if (process.env.NODE_ENV === 'development' && error && error.stack) { %>
+            <h5 class="mt-4">Detalhes do Erro (somente em desenvolvimento):</h5>
+            <pre class="bg-light p-3 border rounded"><%= error.stack %></pre>
+        <% } %>
+    </div>
+</div>

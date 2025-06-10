@@ -1,17 +1,74 @@
-    <h1>Painel do Professor</h1>
-    <p>Bem-vindo(a), Professor(a) <%= user.nome %>!</p>
-    <p>Aqui você poderá gerenciar suas turmas, criar atividades, avaliar entregas e mais.</p>
+<div class="container mt-5">
+    <h1 class="mb-4">Bem-vindo, Professor <%= user.nome %>!</h1>
+    <p class="lead">Aqui você pode gerenciar suas turmas e atividades.</p>
 
-    <h2>Minhas Turmas</h2>
-    <a href="/turmas/nova">Criar Nova Turma</a>
-    <%# Aqui você listaria as turmas do professor %>
-    <p><em>Funcionalidade de listar turmas do professor a ser implementada.</em></p>
-    <a href="/turmas">Ver todas as minhas turmas</a>
+ 
 
-
-    <h2>Atividades Recentes</h2>
-    <%# Aqui você listaria as atividades recentes criadas %>
-    <p><em>Funcionalidade de listar atividades criadas a ser implementada.</em></p>
-    
-    <a href="/auth/logout">Sair</a>
-    
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-primary">Minhas Turmas</h5>
+                    <p class="card-text">Gerencie suas turmas e os alunos matriculados.</p>
+                    <a href="/turmas" class="btn btn-primary">Ver Turmas</a>
+                    <ul class="list-group list-group-flush mt-3">
+                        <% if (typeof turmasProfessor !== 'undefined' && turmasProfessor.length > 0) { %>
+                            <% turmasProfessor.forEach(turma => { %>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="/turmas/<%= turma.id_turma %>"><%= turma.nome %></a>
+                                    <span class="badge bg-secondary rounded-pill"><%= typeof turma.totalAlunos !== 'undefined' ? turma.totalAlunos : 'N/A' %> Alunos</span>
+                                </li>
+                            <% }) %>
+                        <% } else { %>
+                            <li class="list-group-item">Nenhuma turma encontrada.</li>
+                        <% } %>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-success">Minhas Atividades</h5>
+                    <p class="card-text">Crie e gerencie as atividades para suas turmas.</p>
+                    <a href="/atividades/nova" class="btn btn-success mb-2">Criar Nova Atividade</a>
+                    <a href="/atividades" class="btn btn-info mb-2">Ver Todas Atividades</a>
+                     <ul class="list-group list-group-flush mt-3">
+                        <% if (typeof atividadesCriadas !== 'undefined' && atividadesCriadas.length > 0) { %>
+                            <% atividadesCriadas.forEach(ativ => { %>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="/atividades/<%= ativ.id_atividade %>"><%= ativ.titulo %> (<%= ativ.nome_turma %>)</a>
+                                    <span class="badge bg-warning text-dark">Prazo: <%= new Date(ativ.prazo).toLocaleDateString('pt-BR') %></span>
+                                </li>
+                            <% }) %>
+                        <% } else { %>
+                            <li class="list-group-item">Nenhuma atividade criada.</li>
+                        <% } %>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-12 mt-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title text-danger">Entregas Pendentes de Avaliação</h5>
+                    <p class="card-text">Entregas de atividades dos seus alunos que precisam de sua atenção.</p>
+                    <ul class="list-group list-group-flush mt-3">
+                        <% if (typeof entregasPendentes !== 'undefined' && entregasPendentes.length > 0) { %>
+                            <% entregasPendentes.forEach(entrega => { %>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="/atividades/<%= entrega.id_atividade %>">
+                                        Atividade: <%= entrega.titulo_atividade %> - Aluno: <%= entrega.nome_aluno %>
+                                    </a>
+                                    <span class="badge bg-danger">Status: <%= entrega.status %></span>
+                                </li>
+                            <% }) %>
+                        <% } else { %>
+                            <li class="list-group-item">Nenhuma entrega pendente de avaliação.</li>
+                        <% } %>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

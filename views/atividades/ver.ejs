@@ -1,0 +1,158 @@
+<div class="container mt-4">
+    <h1>Atividade: <%= atividade.titulo %></h1>
+    <hr>
+    <%- include('../partials/messages') %>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Detalhes da Atividade
+            <% if (user.tipo === 'professor' && user.id === atividade.id_professor) { %>
+                <a href="/atividades/<%= atividade.id_atividade %>/editar" class="btn btn-warning btn-sm float-end">Editar Atividade</a>
+            <% } %>
+        </div>
+        <div class="card-body">
+            <p><strong>Turma:</strong> <%= atividade.nome_turma %></p>
+            <p><strong>Professor:</strong> <%= atividade.nome_professor %></p>
+            <p><strong>Prazo:</strong> <%= new Date(atividade.prazo).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></p>
+            <p><strong>Descrição:</strong> <%= atividade.descricao %></p>
+            <% if (atividade.arquivo) { %>
+                <p><strong>Arquivo da Atividade:</strong> <a href="<%= atividade.arquivo %>" target="_blank" class="btn btn-info btn-sm">Ver Arquivo</a></p>
+            <% } %>
+
+            <% if (user.tipo === 'professor' && user.id === atividade.id_professor) { %>
+                <form action="/atividades/<%= atividade.id_atividade %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir esta atividade? Todas as entregas relacionadas serão removidas!');">
+                    <button type="submit" class="btn btn-danger btn-sm">Excluir Atividade</button>
+                </form>
+            <% } %>
+        </div>
+    </div>
+
+    <% if (user.tipo === 'aluno') { %>
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                Sua Entrega
+            </div>
+            <div class="card-body">
+                <% if (minhaEntrega) { %>
+                    <p><strong>Status:</strong> 
+                        <span class="badge 
+                            <% if (minhaEntrega.status === 'avaliado') { %>bg-success
+                            <% } else if (minhaEntrega.status === 'entregue') { %>bg-info
+                            <% } else if (minhaEntrega.status === 'atrasado') { %>bg-warning text-dark
+                            <% } else { %>bg-secondary<% } %>">
+                            <%= minhaEntrega.status.charAt(0).toUpperCase() + minhaEntrega.status.slice(1) %>
+                        </span>
+                    </p>
+                    <p><strong>Data da Entrega:</strong> <%= new Date(minhaEntrega.data_entrega).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></p>
+                    <% if (minhaEntrega.arquivo) { %>
+                        <p><strong>Seu Arquivo:</strong> <a href="<%= minhaEntrega.arquivo %>" target="_blank" class="btn btn-info btn-sm">Ver Minha Entrega</a></p>
+                    <% } %>
+                    <% if (typeof minhaEntrega.nota !== 'undefined' && minhaEntrega.nota !== null) { %>
+                        <p><strong>Nota:</strong> <span class="badge bg-primary fs-5"><%= minhaEntrega.nota %></span></p>
+                        <% if (minhaEntrega.comentario) { %>
+                            <p><strong>Comentário:</strong> <%= minhaEntrega.comentario %></p>
+                        <% } %>
+                    <% } else if (minhaEntrega.status !== 'avaliado') { %>
+                         <p>Sua entrega ainda não foi avaliada.</p>
+                         <% if (minhaEntrega.comentario) { %>
+                            <p><strong>Seu Comentário de Entrega:</strong> <%= minhaEntrega.comentario %></p>
+                        <% } %>
+                    <% } %>
+
+                    <hr>
+                    <h6>Atualizar Entrega:</h6>
+                <% } else { %>
+                    <p>Você ainda não fez uma entrega para esta atividade.</p>
+                    <h6>Fazer Entrega:</h6>
+                <% } %>
+
+                <form action="/atividades/<%= atividade.id_atividade %>/entregar" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="arquivoEntrega" class="form-label">Arquivo para Entrega (PDF, DOC, etc.):</label>
+                        <input type="file" class="form-control" id="arquivoEntrega" name="arquivo" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comentario" class="form-label">Comentário (opcional):</label>
+                        <textarea class="form-control" id="comentario" name="comentario" rows="3"><%= minhaEntrega ? minhaEntrega.comentario : '' %></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <%= minhaEntrega ? 'Atualizar Entrega' : 'Fazer Entrega' %>
+                    </button>
+                </form>
+            </div>
+        </div>
+    <% } %>
+
+    <% if (user.tipo === 'professor' && user.id === atividade.id_professor) { %>
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                Entregas dos Alunos (<%= entregas.length %>)
+            </div>
+            <div class="card-body">
+                <% if (entregas && entregas.length > 0) { %>
+                    <ul class="list-group">
+                        <% entregas.forEach(entrega => { %>
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5><%= entrega.nome_aluno %> (<%= entrega.email_aluno %>)</h5>
+                                    <small>Entregue em: <%= new Date(entrega.data_entrega).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></small>
+                                </div>
+                                <p>Status: 
+                                    <span class="badge 
+                                        <% if (entrega.status === 'avaliado') { %>bg-success
+                                        <% } else if (entrega.status === 'entregue') { %>bg-info
+                                        <% } else if (entrega.status === 'atrasado') { %>bg-warning text-dark
+                                        <% } else { %>bg-secondary<% } %>">
+                                        <%= entrega.status.charAt(0).toUpperCase() + entrega.status.slice(1) %>
+                                    </span>
+                                </p>
+                                <% if (entrega.arquivo) { %>
+                                    <p>Arquivo: <a href="<%= entrega.arquivo %>" target="_blank" class="btn btn-sm btn-info">Ver Entrega</a></p>
+                                <% } %>
+                                
+                                <% if (entrega.status === 'avaliado') { %>
+                                    <p><strong>Nota:</strong> <span class="badge bg-primary fs-5"><%= entrega.nota %></span></p>
+                                    <% if (entrega.comentario) { %>
+                                        <p><strong>Comentário (Professor):</strong> <%= entrega.comentario %></p>
+                                    <% } %>
+                                    <form action="/atividades/entregas/<%= entrega.id_entrega %>/avaliar?_method=POST" method="POST" class="mt-2">
+                                        <h6>Re-avaliar:</h6>
+                                        <div class="mb-2">
+                                            <label for="nota_<%= entrega.id_entrega %>" class="form-label">Nota (0-100):</label>
+                                            <input type="number" class="form-control" id="nota_<%= entrega.id_entrega %>" name="nota" min="0" max="100" value="<%= entrega.nota %>" required>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label for="comentario_<%= entrega.id_entrega %>" class="form-label">Comentário do Professor (opcional):</label>
+                                            <textarea class="form-control" id="comentario_<%= entrega.id_entrega %>" name="comentario" rows="2"><%= entrega.comentario || '' %></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-success btn-sm">Atualizar Avaliação</button>
+                                    </form>
+                                <% } else { %>
+                                    <% if (entrega.comentario) { %>
+                                        <p><strong>Comentário do Aluno:</strong> <%= entrega.comentario %></p>
+                                    <% } %>
+                                    <form action="/atividades/entregas/<%= entrega.id_entrega %>/avaliar?_method=POST" method="POST" class="mt-2">
+                                        <h6>Avaliar Entrega:</h6>
+                                        <div class="mb-2">
+                                            <label for="nota_<%= entrega.id_entrega %>" class="form-label">Nota (0-100):</label>
+                                            <input type="number" class="form-control" id="nota_<%= entrega.id_entrega %>" name="nota" min="0" max="100" required>
+                                        </div>
+                                        <div class="mb-2">
+                                            <label for="comentario_<%= entrega.id_entrega %>" class="form-label">Comentário do Professor (opcional):</label>
+                                            <textarea class="form-control" id="comentario_<%= entrega.id_entrega %>" name="comentario" rows="2"></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-success btn-sm">Avaliar</button>
+                                    </form>
+                                <% } %>
+                            </li>
+                        <% }); %>
+                    </ul>
+                <% } else { %>
+                    <p>Nenhuma entrega para esta atividade ainda.</p>
+                <% } %>
+            </div>
+        </div>
+    <% } %>
+
+    <a href="/atividades" class="btn btn-secondary">Voltar para Atividades</a>
+</div>

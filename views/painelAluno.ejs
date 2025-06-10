@@ -1,14 +1,99 @@
+<div class="container mt-4">
     <h1>Painel do Aluno</h1>
-    <p>Bem-vindo(a), <%= user.nome %>!</p>
-    <p>Aqui você poderá ver suas turmas, atividades, notas e mais.</p>
-    
-    <h2>Minhas Turmas</h2>
-    <%# Aqui você listaria as turmas do aluno %>
-    <p><em>Funcionalidade de listar turmas do aluno a ser implementada.</em></p>
-    
-    <h2>Minhas Atividades Recentes</h2>
-    <%# Aqui você listaria as atividades recentes %>
-    <p><em>Funcionalidade de listar atividades do aluno a ser implementada.</em></p>
-    
-    <a href="/auth/logout">Sair</a>
-    
+    <hr>
+    <%- include('./partials/messages') %>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    Minhas Turmas (<%= turmasInscritas.length %>)
+                    <a href="/turmas/inscrever" class="btn btn-sm btn-light float-end">Inscrever-se em Turma</a>
+                </div>
+                <div class="card-body">
+                    <% if (turmasInscritas && turmasInscritas.length > 0) { %>
+                        <ul class="list-group list-group-flush">
+                            <% turmasInscritas.forEach(turma => { %>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="/turmas/<%= turma.id_turma %>">
+                                        <%= turma.nome %> (<%= turma.codigo %>)
+                                        <small class="text-muted"><%= turma.nome_professor ? ` - Prof. ${turma.nome_professor}` : '' %></small>
+                                    </a>
+                                    <div>
+                                        <span class="badge bg-secondary rounded-pill me-2"><%= turma.totalAtividades %> Atividades</span>
+                                        <% if (turma.media_final_10 && turma.media_final_10 !== 'N/A' && turma.media_final_10 !== 'Erro') { %>
+                                            <span class="badge bg-success">Média: <%= turma.media_final_10 %></span>
+                                        <% } else if (turma.media_final_10 === 'N/A') { %>
+                                            <span class="badge bg-info">Média: N/A</span>
+                                        <% } else if (turma.media_final_10 === 'Erro') { %>
+                                            <span class="badge bg-danger">Média: Erro</span>
+                                        <% } %>
+                                    </div>
+                                </li>
+                            <% }); %>
+                        </ul>
+                    <% } else { %>
+                        <p>Você ainda não está inscrito em nenhuma turma.</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    Atividades Pendentes (<%= atividadesPendentes.length %>)
+                </div>
+                <div class="card-body">
+                    <% if (atividadesPendentes && atividadesPendentes.length > 0) { %>
+                        <ul class="list-group list-group-flush">
+                            <% atividadesPendentes.forEach(ativ => { %>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="/atividades/<%= ativ.id_atividade %>">
+                                        <%= ativ.titulo %> (<%= ativ.nome_turma %>)
+                                    </a>
+                                    <span class="badge bg-danger">Prazo: <%= new Date(ativ.prazo).toLocaleDateString('pt-BR') %></span>
+                                </li>
+                            <% }); %>
+                        </ul>
+                    <% } else { %>
+                        <p>Nenhuma atividade pendente no momento. Bom trabalho!</p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    Atividades Avaliadas (<%= atividadesAvaliadas.length %>)
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush mt-3">
+                        <% if (typeof atividadesAvaliadas !== 'undefined' && atividadesAvaliadas.length > 0) { %>
+                            <% atividadesAvaliadas.forEach(ativ => { %>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <a href="/atividades/<%= ativ.id_atividade %>">
+                                        <%= ativ.titulo %> (<%= ativ.nome_turma %>)
+                                    </a>
+                                    <div>
+                                        <% if (typeof ativ.nota !== 'undefined' && ativ.nota !== null) { %>
+                                            <span class="badge bg-success me-2">Nota: <%= ativ.nota %></span>
+                                        <% } else { %>
+                                            <span class="badge bg-secondary me-2">Nota: N/A</span>
+                                        <% } %>
+                                        <% if (ativ.comentario && ativ.comentario.length > 0) { %>
+                                            <small class="text-muted"><%= ativ.comentario.substring(0, 50) %><% if (ativ.comentario.length > 50) { %>...<% } %></small>
+                                        <% } %>
+                                    </div>
+                                </li>
+                            <% }); %>
+                        <% } else { %>
+                            <p>Nenhuma atividade avaliada ainda.</p>
+                        <% } %>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
