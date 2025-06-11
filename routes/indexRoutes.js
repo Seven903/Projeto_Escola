@@ -33,7 +33,6 @@ router.get('/painel', isAuthenticated, async (req, res) => {
                     ORDER BY t.nome ASC
                 `, [req.user.id]);
 
-                 
                 for (let turma of turmasInscritas) {
                     try {
                         const notasDaTurma = await dbAll(`
@@ -46,14 +45,14 @@ router.get('/painel', isAuthenticated, async (req, res) => {
                         let somaNotas = 0;
                         if (notasDaTurma.length > 0) {
                             somaNotas = notasDaTurma.reduce((sum, entrega) => sum + entrega.nota, 0);
-                            const mediaCem = somaNotas / notasDaTurma.length;  
-                            turma.media_final_10 = (mediaCem / 10).toFixed(2);  
+                            const mediaCem = somaNotas / notasDaTurma.length; 
+                            turma.media_final_10 = (mediaCem / 10).toFixed(2);
                         } else {
-                            turma.media_final_10 = 'N/A';  
+                            turma.media_final_10 = 'N/A'; 
                         }
                     } catch (err) {
                         console.error(`Erro ao calcular média para a turma ${turma.nome}:`, err);
-                        turma.media_final_10 = 'Erro';  
+                        turma.media_final_10 = 'Erro'; 
                     }
                 }
 
@@ -63,7 +62,7 @@ router.get('/painel', isAuthenticated, async (req, res) => {
             }
 
             try {
-                
+              
                 atividadesPendentes = await dbAll(`
                     SELECT a.id_atividade, a.titulo, a.prazo, t.nome AS nome_turma, e.status AS status_entrega
                     FROM Atividade a
@@ -95,7 +94,7 @@ router.get('/painel', isAuthenticated, async (req, res) => {
             res.render('painelAluno', {
                 title: 'Painel do Aluno',
                 user: req.user,
-                turmasInscritas: turmasInscritas, 
+                turmasInscritas: turmasInscritas,
                 atividadesPendentes: atividadesPendentes,
                 atividadesAvaliadas: atividadesAvaliadas,
                 messages: req.flash()
@@ -138,7 +137,7 @@ router.get('/painel', isAuthenticated, async (req, res) => {
                     FROM Entrega e
                     JOIN Atividade a ON e.id_atividade = a.id_atividade
                     JOIN Turma t ON a.id_turma = t.id_turma
-                    JOIN Usuario u_aluno ON e.id_aluno = u.id_usuario
+                    JOIN Usuario u_aluno ON e.id_aluno = u_aluno.id_usuario -- CORREÇÃO AQUI: u.id_usuario para u_aluno.id_usuario
                     WHERE t.id_professor = ? AND e.status != 'avaliado'
                     ORDER BY e.data_entrega ASC
                 `, [req.user.id]);

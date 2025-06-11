@@ -39,9 +39,9 @@ db.serialize(() => {
     CREATE TABLE IF NOT EXISTS Turma (
         id_turma INTEGER PRIMARY KEY AUTOINCREMENT,
         nome VARCHAR(255) NOT NULL,
-        codigo VARCHAR(100) NOT NULL UNIQUE, -- Código para alunos se inscreverem
+        codigo VARCHAR(100) NOT NULL UNIQUE, 
         descricao TEXT,
-        id_professor INTEGER NOT NULL, -- Referencia diretamente a Usuario.id_usuario
+        id_professor INTEGER NOT NULL,
         FOREIGN KEY (id_professor) REFERENCES Usuario(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE
     );`,
     (err) => {
@@ -73,10 +73,10 @@ db.serialize(() => {
         descricao TEXT NOT NULL,
         prazo DATETIME NOT NULL,
         id_turma INTEGER NOT NULL,
-        id_professor INTEGER NOT NULL, -- COLUNA CORRIGIDA AQUI
-        arquivo VARCHAR(500), -- Caminho para o arquivo anexo da atividade
+        id_professor INTEGER NOT NULL, 
+        arquivo VARCHAR(500),
         FOREIGN KEY (id_turma) REFERENCES Turma(id_turma) ON DELETE CASCADE ON UPDATE CASCADE,
-        FOREIGN KEY (id_professor) REFERENCES Usuario(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE -- Chave estrangeira para Usuario
+        FOREIGN KEY (id_professor) REFERENCES Usuario(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE 
     );`,
     (err) => {
       if (err) console.error("Erro ao criar tabela Atividade:", err.message);
@@ -91,12 +91,12 @@ db.serialize(() => {
         id_atividade INTEGER NOT NULL,
         id_aluno INTEGER NOT NULL,
         data_entrega DATETIME DEFAULT CURRENT_TIMESTAMP,
-        arquivo VARCHAR(500), -- Caminho para o arquivo de entrega do aluno
-        nota DECIMAL(5,2), -- Nota atribuída pelo professor (0-100)
-        comentario TEXT, -- Comentário do professor
+        arquivo VARCHAR(500), 
+        nota DECIMAL(5,2), 
+        comentario TEXT, 
         status VARCHAR(50) DEFAULT 'pendente' CHECK (status IN ('pendente', 'entregue', 'atrasado', 'avaliado')),
         FOREIGN KEY (id_atividade) REFERENCES Atividade(id_atividade) ON DELETE CASCADE ON UPDATE CASCADE,
-        FOREIGN KEY (id_aluno) REFERENCES Usuario(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE -- Chave estrangeira para Usuario
+        FOREIGN KEY (id_aluno) REFERENCES Usuario(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE 
     );`,
     (err) => {
       if (err) console.error("Erro ao criar tabela Entrega:", err.message);
