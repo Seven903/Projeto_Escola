@@ -58,7 +58,7 @@ router.get('/nova', isAuthenticated, isProfessor, (req, res) => {
 
 router.post('/', isAuthenticated, isProfessor, async (req, res) => {
     const { nome, codigo, descricao } = req.body;
-    const id_professor = req.user.id; // Agora req.user.id deve estar populado
+    const id_professor = req.user.id; 
 
     if (!nome || !codigo) {
         req.flash('error_msg', 'Nome e Código da Turma são obrigatórios.');
@@ -217,7 +217,7 @@ router.put('/:id', isAuthenticated, isProfessor, async (req, res) => {
     }
 
     try {
-        const turmaDoProfessor = await dbGet("SELECT id_turma FROM Turma WHERE id_turma = ? AND id_professor = ?", [turmaId, req.user.id]); // Usa req.user.id
+        const turmaDoProfessor = await dbGet("SELECT id_turma FROM Turma WHERE id_turma = ? AND id_professor = ?", [turmaId, req.user.id]); 
         if (!turmaDoProfessor) {
             req.flash('error_msg', 'Você não tem permissão para editar esta turma.');
             return res.redirect('/turmas');
