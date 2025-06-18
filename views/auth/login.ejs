@@ -1,11 +1,11 @@
-<div class="container mt-5">
+<div class="container mt-4">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white text-center">
-                    <h4>Login</h4>
-                </div>
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg p-4 mb-5 bg-white rounded">
                 <div class="card-body">
+                    <h2 class="card-title text-center mb-4">Login</h2>
+                    
+                    
                     <%- include('../partials/messages') %>
 
                     <form action="/auth/login" method="POST">
@@ -18,10 +18,12 @@
                             <input type="password" class="form-control" id="senha" name="senha" required>
                         </div>
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success">Entrar</button>
-                            <a href="/auth/cadastro" class="btn btn-link">Não tem uma conta? Cadastre-se</a>
+                            <button type="submit" class="btn btn-primary">Entrar</button>
                         </div>
                     </form>
+                    <p class="mt-4 text-center">
+                        Não tem uma conta? <a href="/auth/cadastro">Cadastre-se aqui</a>
+                    </p>
                 </div>
             </div>
         </div>

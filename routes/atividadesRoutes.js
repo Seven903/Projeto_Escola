@@ -96,12 +96,29 @@ router.get('/nova', isAuthenticated, isProfessor, async (req, res) => {
 });
 
 router.post('/', isAuthenticated, isProfessor, upload.single('arquivo'), async (req, res) => {
-    const { titulo, descricao, prazo, id_turma } = req.body;
+    const { titulo, descricao, data, hora, id_turma } = req.body; 
     const id_professor = req.user.id;
     const arquivo = req.file ? `/uploads/${req.file.filename}` : null;
 
-    if (!titulo || !descricao || !prazo || !id_turma) {
-        req.flash('error_msg', 'Título, Descrição, Prazo e Turma são obrigatórios.');
+    if (!titulo || !descricao || !data || !id_turma) {
+        req.flash('error_msg', 'Título, Descrição, Data e Turma são obrigatórios.');
+        if (arquivo) fs.unlinkSync(path.join(__dirname, '..', 'public', arquivo));
+        return res.redirect('/atividades/nova');
+    }
+
+    let prazoCompleto;
+    if (hora) {
+        prazoCompleto = `${data}T${hora}:00`; 
+    } else {
+        prazoCompleto = `${data}T23:59:59`; 
+    }
+
+    const prazoDateObj = new Date(prazoCompleto);
+    const now = new Date();
+
+    
+    if (prazoDateObj <= now) {
+        req.flash('error_msg', 'O prazo de entrega deve ser uma data e hora futura.');
         if (arquivo) fs.unlinkSync(path.join(__dirname, '..', 'public', arquivo));
         return res.redirect('/atividades/nova');
     }
@@ -115,7 +132,7 @@ router.post('/', isAuthenticated, isProfessor, upload.single('arquivo'), async (
         }
 
         await dbRun("INSERT INTO Atividade (titulo, descricao, prazo, id_turma, id_professor, arquivo) VALUES (?, ?, ?, ?, ?, ?)",
-            [titulo, descricao, prazo, id_turma, id_professor, arquivo]);
+            [titulo, descricao, prazoDateObj.toISOString(), id_turma, id_professor, arquivo]); 
 
         req.flash('success_msg', 'Atividade criada com sucesso!');
         res.redirect(`/turmas/${id_turma}`);
@@ -220,7 +237,7 @@ router.get('/:id/editar', isAuthenticated, isProfessor, async (req, res) => {
 
 router.put('/:id', isAuthenticated, isProfessor, upload.single('arquivo'), async (req, res) => {
     const atividadeId = req.params.id;
-    const { titulo, descricao, prazo, id_turma, arquivo_existente } = req.body;
+    const { titulo, descricao, data, hora, id_turma, arquivo_existente } = req.body; 
     const novoArquivo = req.file ? `/uploads/${req.file.filename}` : null;
 
     let arquivoFinal = novoArquivo;
@@ -233,8 +250,26 @@ router.put('/:id', isAuthenticated, isProfessor, upload.single('arquivo'), async
         }
     }
 
-    if (!titulo || !descricao || !prazo || !id_turma) {
-        req.flash('error_msg', 'Título, Descrição, Prazo e Turma são obrigatórios.');
+    if (!titulo || !descricao || !data || !id_turma) { 
+        req.flash('error_msg', 'Título, Descrição, Data e Turma são obrigatórios.');
+        if (novoArquivo) fs.unlinkSync(path.join(__dirname, '..', 'public', novoArquivo));
+        return res.redirect(`/atividades/${atividadeId}/editar`);
+    }
+
+    
+    let prazoCompleto;
+    if (hora) {
+        prazoCompleto = `${data}T${hora}:00`; 
+    } else {
+        prazoCompleto = `${data}T23:59:59`;
+    }
+
+    const prazoDateObj = new Date(prazoCompleto);
+    const now = new Date();
+
+    
+    if (prazoDateObj <= now) {
+        req.flash('error_msg', 'O prazo de entrega deve ser uma data e hora futura.');
         if (novoArquivo) fs.unlinkSync(path.join(__dirname, '..', 'public', novoArquivo));
         return res.redirect(`/atividades/${atividadeId}/editar`);
     }
@@ -255,7 +290,7 @@ router.put('/:id', isAuthenticated, isProfessor, upload.single('arquivo'), async
         }
 
         await dbRun("UPDATE Atividade SET titulo = ?, descricao = ?, prazo = ?, id_turma = ?, arquivo = ? WHERE id_atividade = ?",
-            [titulo, descricao, prazo, id_turma, arquivoFinal, atividadeId]);
+            [titulo, descricao, prazoDateObj.toISOString(), id_turma, arquivoFinal, atividadeId]);
 
         req.flash('success_msg', 'Atividade atualizada com sucesso!');
         res.redirect(`/atividades/${atividadeId}`);

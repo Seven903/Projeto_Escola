@@ -3,40 +3,46 @@
     <hr>
     <%- include('../partials/messages') %>
 
-    <form action="/atividades" method="POST" enctype="multipart/form-data">
-        <div class="mb-3">
-            <label for="titulo" class="form-label">Título da Atividade:</label>
-            <input type="text" class="form-control" id="titulo" name="titulo" required>
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            Detalhes da Nova Atividade
         </div>
-
-        <div class="mb-3">
-            <label for="descricao" class="form-label">Descrição:</label>
-            <textarea class="form-control" id="descricao" name="descricao" rows="5" required></textarea>
+        <div class="card-body">
+            <form action="/atividades" method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="titulo" class="form-label">Título:</label>
+                    <input type="text" class="form-control" id="titulo" name="titulo" required>
+                </div>
+                <div class="mb-3">
+                    <label for="descricao" class="form-label">Descrição:</label>
+                    <textarea class="form-control" id="descricao" name="descricao" rows="4" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="dataEntrega" class="form-label">Data de Entrega:</label>
+                    <input type="date" class="form-control" id="dataEntrega" name="data" required>
+                </div>
+                <div class="mb-3">
+                    <label for="horaEntrega" class="form-label">Hora de Entrega (Opcional):</label>
+                    <input type="time" class="form-control" id="horaEntrega" name="hora">
+                </div>
+                <div class="mb-3">
+                    <label for="turma" class="form-label">Turma:</label>
+                    <select class="form-select" id="turma" name="id_turma" required>
+                        <option value="">Selecione uma turma</option>
+                        <% turmas.forEach(turma => { %>
+                            <option value="<%= turma.id_turma %>" <%= typeof turmaId !== 'undefined' && turmaId == turma.id_turma ? 'selected' : '' %>>
+                                <%= turma.nome %> (<%= turma.codigo %>)
+                            </option>
+                        <% }); %>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="arquivo" class="form-label">Anexar Arquivo (Opcional):</label>
+                    <input type="file" class="form-control" id="arquivo" name="arquivo">
+                </div>
+                <button type="submit" class="btn btn-primary">Criar Atividade</button>
+                <a href="/atividades" class="btn btn-secondary">Cancelar</a>
+            </form>
         </div>
-
-        <div class="mb-3">
-            <label for="prazo" class="form-label">Prazo de Entrega:</label>
-            <input type="datetime-local" class="form-control" id="prazo" name="prazo" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="id_turma" class="form-label">Selecionar Turma:</label>
-            <select class="form-select" id="id_turma" name="id_turma" required>
-                <option value="">Selecione uma turma</option>
-                <% if (turmas && turmas.length > 0) { %>
-                    <% turmas.forEach(turma => { %>
-                        <option value="<%= turma.id_turma %>"><%= turma.nome %> (<%= turma.codigo %>)</option>
-                    <% }) %>
-                <% } %>
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label for="arquivo" class="form-label">Anexo (Opcional):</label>
-            <input type="file" class="form-control" id="arquivo" name="arquivo">
-        </div>
-
-        <button type="submit" class="btn btn-primary">Criar Atividade</button>
-        <a href="/atividades" class="btn btn-secondary">Cancelar</a>
-    </form>
+    </div>
 </div>
